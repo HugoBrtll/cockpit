@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cockpit running</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#070d1a">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Chakra+Petch:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Charte « montre GPS de nuit » : bleu nuit, vert électrique = effort / objectif, violet = repères et liens.
+     Sombre par défaut, version claire automatique si l'appareil est en mode clair. */
+  color-scheme: dark;
+  --scheme:dark;
+  --bg:#070d1a;
+  --panel:#0d1527;
+  --panel-2:#142039;
+  --line:#1e2b48;
+  --ink:#e9effd;
+  --ink-2:#9caad0;
+  --muted:#65749c;
+  --accent:#3dff9a;
+  --accent-soft:rgba(61,255,154,.12);
+  --on-accent:#03140b;
+  --cool:#a78bfa;
+  --good:#3ddc84; --warn:#ffb547; --bad:#ff5c7a;
+  --on-chip:#050b17;
+  --hero-glow:rgba(61,255,154,.16);
+  --hero-glow-2:rgba(167,139,250,.18);
+  --head-top:#0b1430;
+  --nav-bg:rgba(7,13,26,.9);
+  --tip-bg:#050a15;
+  --hover:rgba(255,255,255,.06);
+  /* catégoriel */
+  --c1:#5b8cff; --c2:#ff7a45; --c3:#2dd4bf; --c4:#ffb547; --c5:#ff6ec7; --c6:#a78bfa;
+  /* calendrier (vide -> beaucoup) */
+  --heat0:#142039; --heat1:#123a3a; --heat2:#11624a; --heat3:#14935f; --heat4:#3dff9a; --heat5:#b8ffd9;
+  /* carte */
+  --map-bg:#0c1322; --map-green:rgba(61,220,132,.16); --map-water:#173f6e; --map-river:#285f9f; --map-coast:#4a8fd6;
+  --map-rail:#4a5570; --map-path:#3a4660; --map-minor:#34405a; --map-major:#5c6a8c; --map-ink:#e9effd; --map-plate:rgba(8,12,22,.85);
+  --trk-new:#3dff9a; --trk-halo:rgba(4,8,16,.92); --trk-old:rgba(255,110,199,.42); --trk-key:#ff6ec7;
+  --f-display:"Saira Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-num:"Chakra Petch","Saira Semi Condensed",ui-monospace,monospace;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+  /* Layout : colonne unique type appli mobile, barre d'onglets en bas ; colonnes multiples et rail de navigation sur PC */
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  color-scheme: light;
+  --scheme:light;
+  --bg:#eef2f9;
+  --panel:#ffffff;
+  --panel-2:#e8eef8;
+  --line:#d3dcec;
+  --ink:#0a1430;
+  --ink-2:#43507a;
+  --muted:#6f7ca0;
+  --accent:#00a35c;
+  --accent-soft:rgba(0,163,92,.11);
+  --on-accent:#ffffff;
+  --cool:#6a4fe0;
+  --good:#0e9f57; --warn:#b97300; --bad:#dc2f55;
+  --on-chip:#ffffff;
+  --hero-glow:rgba(0,163,92,.12);
+  --hero-glow-2:rgba(106,79,224,.12);
+  --head-top:#dfe7f6;
+  --nav-bg:rgba(255,255,255,.92);
+  --tip-bg:#0a1430;
+  --hover:rgba(10,20,48,.05);
+  --c1:#2f6fe6; --c2:#e2622b; --c3:#0d9488; --c4:#c27c00; --c5:#d23f9b; --c6:#7558e0;
+  --heat0:#e3e9f4; --heat1:#c3ecd6; --heat2:#86d9ad; --heat3:#3fbf7f; --heat4:#00a35c; --heat5:#00663a;
+  --map-bg:#e4e9ef; --map-green:rgba(14,159,87,.24); --map-water:#93c1ef; --map-river:#5f9fe3; --map-coast:#4f8fd8;
+  --map-rail:#98a3b6; --map-path:#bcc5d3; --map-minor:#ffffff; --map-major:#f3c763; --map-ink:#0a1430; --map-plate:rgba(255,255,255,.9);
+  --trk-new:#008f50; --trk-halo:rgba(255,255,255,.95); --trk-old:rgba(214,40,130,.5); --trk-key:#d62882;
+}}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --scheme:light;
+  --bg:#eef2f9;
+  --panel:#ffffff;
+  --panel-2:#e8eef8;
+  --line:#d3dcec;
+  --ink:#0a1430;
+  --ink-2:#43507a;
+  --muted:#6f7ca0;
+  --accent:#00a35c;
+  --accent-soft:rgba(0,163,92,.11);
+  --on-accent:#ffffff;
+  --cool:#6a4fe0;
+  --good:#0e9f57; --warn:#b97300; --bad:#dc2f55;
+  --on-chip:#ffffff;
+  --hero-glow:rgba(0,163,92,.12);
+  --hero-glow-2:rgba(106,79,224,.12);
+  --head-top:#dfe7f6;
+  --nav-bg:rgba(255,255,255,.92);
+  --tip-bg:#0a1430;
+  --hover:rgba(10,20,48,.05);
+  --c1:#2f6fe6; --c2:#e2622b; --c3:#0d9488; --c4:#c27c00; --c5:#d23f9b; --c6:#7558e0;
+  --heat0:#e3e9f4; --heat1:#c3ecd6; --heat2:#86d9ad; --heat3:#3fbf7f; --heat4:#00a35c; --heat5:#00663a;
+  --map-bg:#e4e9ef; --map-green:rgba(14,159,87,.24); --map-water:#93c1ef; --map-river:#5f9fe3; --map-coast:#4f8fd8;
+  --map-rail:#98a3b6; --map-path:#bcc5d3; --map-minor:#ffffff; --map-major:#f3c763; --map-ink:#0a1430; --map-plate:rgba(255,255,255,.9);
+  --trk-new:#008f50; --trk-halo:rgba(255,255,255,.95); --trk-old:rgba(214,40,130,.5); --trk-key:#d62882;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit}
+a{color:var(--cool)}
+:focus-visible{outline:2px solid var(--cool);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px}
+
+/* Header */
+header.top{padding:calc(14px + env(safe-area-inset-top)) 0 6px;background:linear-gradient(180deg,var(--head-top) 0%,var(--bg) 100%)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column}
+.brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.01em;line-height:1.05}
+.brand h1 span{color:var(--accent)}
+.streak{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.streak b{font-family:var(--f-display);font-size:20px;color:var(--accent)}
+.streak small{color:var(--ink-2);font-size:12px;line-height:1.1}
+.sync{color:var(--muted);font-size:12px;margin-top:6px}
+
+/* Nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--nav-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{max-width:820px;margin:0 auto;display:grid;grid-template-columns:repeat(7,1fr)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 8px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:.03em}
+nav.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs a.on{color:var(--accent)}
+
+section.view{display:none;padding-top:8px}
+section.view.on{display:block}
+.grid{display:grid;gap:12px}
+@media (min-width:720px){.g2{grid-template-columns:1fr 1fr}}
+.grid>*{min-width:0}
+.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h2,.card h3{margin:0 0 10px;font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance}
+.card h2{font-size:21px}
+.card h3{font-size:17px;color:var(--ink)}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sec-title{font-family:var(--f-display);font-size:24px;font-weight:700;margin:18px 0 10px;text-wrap:balance}
+.sub{color:var(--ink-2);font-size:13px}
+.note{color:var(--muted);font-size:12px;margin-top:8px}
+
+/* Hero objectif */
+.hero{position:relative;overflow:hidden;background:radial-gradient(110% 130% at 100% 0%,var(--hero-glow) 0%,transparent 55%),radial-gradient(90% 120% at 0% 100%,var(--hero-glow-2) 0%,transparent 60%),var(--panel)}
+.hero .big{font-family:var(--f-display);font-weight:700;font-size:64px;line-height:.95;letter-spacing:-.01em}
+.hero .big small{font-size:22px;color:var(--ink-2);font-weight:600;margin-left:6px}
+.hero .row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.pill.good{background:color-mix(in srgb,var(--good) 13%,transparent);color:var(--good);border-color:color-mix(in srgb,var(--good) 38%,transparent)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 13%,transparent);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 38%,transparent)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 38%,transparent)}
+.pill.cool{background:color-mix(in srgb,var(--cool) 13%,transparent);color:var(--cool);border-color:color-mix(in srgb,var(--cool) 38%,transparent)}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.ladder{display:grid;gap:8px;margin-top:16px}
+.lrow{display:grid;grid-template-columns:118px 1fr 52px;gap:10px;align-items:center;font-size:12px;color:var(--ink-2)}
+.lrow b{font-family:var(--f-display);font-size:18px;text-align:right}
+.lt{position:relative;height:6px;border-radius:3px;background:var(--panel-2)}
+.lt .lg{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed var(--accent);opacity:.7}
+.lt .ld{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--panel)}
+.lt .lgl{position:absolute;top:0;transform:translateX(-50%);color:var(--accent);font-weight:700;font-size:11px}
+.track{position:relative;height:46px;margin:16px 4px 4px}
+.track .bar{position:absolute;left:0;right:0;top:18px;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--cool) 55%,var(--panel-2) 100%)}
+.track .mk{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--ink-2);white-space:nowrap}
+.track .mk i{display:block;width:2px;height:14px;background:var(--ink-2);margin-top:2px}
+.track .mk.goal{color:var(--accent);font-weight:700}
+.track .mk.goal i{background:var(--accent);height:30px;width:3px;margin-top:-6px}
+.track .mk.lo{top:auto;bottom:-6px;flex-direction:column-reverse}
+.track .mk.lo i{margin:0 0 2px}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:560px){.tiles.t4{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--panel-2);border-radius:12px;padding:10px 12px}
+.tile .v{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1.05}
+.tile .v small{font-size:14px;color:var(--ink-2);font-weight:600;margin-left:3px}
+.tile .l{font-size:12px;color:var(--ink-2)}
+.tile .d{font-size:12px;margin-top:2px}
+.up{color:var(--good)} .down{color:var(--bad)}
+
+/* Chips/filters */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 12px}
+
+/* Plan */
+.type{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:var(--on-chip)}
+.sess{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:11px 12px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--tc,var(--line));border-radius:12px;cursor:pointer}
+.sess.today{box-shadow:0 0 0 2px var(--accent) inset}
+.sess.done{opacity:.55}
+.sess .day{text-align:center;line-height:1.05}
+.sess .day b{display:block;font-family:var(--f-display);font-size:24px}
+.sess .day small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.sess .t{font-weight:600}
+.sess .m{color:var(--ink-2);font-size:13px}
+.sess .km{font-family:var(--f-display);font-size:20px;font-weight:600;text-align:right}
+.sess .km small{display:block;font-size:11px;color:var(--muted);font-family:var(--f-body);font-weight:500}
+.sess-detail{grid-column:1/-1;display:none;border-top:1px dashed var(--line);padding-top:10px;margin-top:4px}
+.sess.open .sess-detail{display:block}
+.sess-detail ol{margin:0 0 8px;padding-left:18px}
+.sess-detail li{margin:2px 0}
+.why{font-size:13px;color:var(--ink-2);background:var(--panel-2);padding:8px 10px;border-radius:8px}
+.btnrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel-2);padding:7px 12px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.weekhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:4px 0 8px}
+.vol{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;background:var(--panel-2)}
+.vol span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.list{display:grid;gap:8px}
+.coach{border-left:4px solid var(--cool)}
+.chg{display:grid;grid-template-columns:62px 1fr;gap:8px;font-size:13px;padding:6px 0;border-top:1px solid var(--line)}
+.chg:first-of-type{border-top:0}
+.chg b{color:var(--muted);font-weight:600;font-size:12px}
+.adj{display:inline-flex;margin-left:6px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cool);border:1px solid color-mix(in srgb,var(--cool) 45%,transparent);border-radius:5px;padding:1px 5px;vertical-align:1px}
+.real{font-size:12px;margin-top:3px}
+.real.ok{color:var(--good)} .real.miss{color:var(--muted)}
+
+/* Charts */
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .ax{fill:var(--muted);font-size:10.5px;font-family:var(--f-body)}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.tip{position:absolute;pointer-events:none;background:var(--tip-bg);color:#e9effd;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:12px;line-height:1.35;min-width:110px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:opacity .12s;z-index:5;white-space:nowrap}
+.tip b{font-family:var(--f-display);font-size:16px}
+.tip .k{color:var(--muted)}
+.heat{display:block;width:100%;overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{color:var(--muted);font-weight:600;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 6px;border-bottom:1px solid var(--line)}
+table.t td{padding:7px 6px;border-bottom:1px solid var(--line)}
+table.t td.r,table.t th.r{text-align:right;white-space:nowrap}
+.scroll-x{overflow-x:auto}
+
+/* Records */
+.prs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:560px){.prs{grid-template-columns:repeat(4,1fr)}}
+.pr{background:var(--panel-2);border-radius:12px;padding:10px 12px;text-decoration:none;color:inherit;display:block;border:1px solid transparent}
+.pr:hover{border-color:var(--line)}
+.pr .d{font-size:12px;color:var(--ink-2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.pr .v{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1.05}
+.pr .p{font-size:12px;color:var(--ink-2)}
+.pr .y{font-size:11px;color:var(--muted)}
+.pr.hot{background:linear-gradient(160deg,var(--accent-soft),var(--panel-2) 60%);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+.zone{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;font-size:13px;padding:5px 0}
+.zone .zb{height:8px;border-radius:4px}
+.gear{display:grid;gap:4px;padding:8px 0;border-bottom:1px solid var(--line)}
+.gear:last-child{border-bottom:0}
+.gear .top{display:flex;justify-content:space-between;gap:8px}
+.meter{height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+.meter span{display:block;height:100%;border-radius:4px}
+
+/* Journal */
+.search{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:10px;font:inherit}
+.act{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;padding:9px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;cursor:pointer;text-align:left;width:100%}
+.act canvas,.act .ph{width:58px;height:58px;border-radius:9px;background:var(--panel-2);display:block}
+.act .n{font-weight:600;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.act .s{font-size:12px;color:var(--ink-2)}
+.act .k{font-family:var(--f-display);font-size:19px;font-weight:600;text-align:right;white-space:nowrap}
+.act .k small{display:block;font-family:var(--f-body);font-size:11px;color:var(--muted);font-weight:500}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.mapbox{position:relative}
+.mapbtns{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:6px}
+.mapbtns button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--map-plate);color:var(--ink);font:600 18px var(--f-body);cursor:pointer;display:grid;place-items:center}
+.mapbtns button:hover{border-color:var(--accent);color:var(--accent)}
+#routeMap{width:100%;height:420px;display:block;border-radius:12px;background:var(--map-bg);touch-action:none}
+
+/* Sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:88%;overflow:auto;background:var(--panel);border-radius:18px 18px 0 0;border-top:1px solid var(--line);padding:10px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s ease}
+.sheet.on{transform:none}
+.sheet-bg.on{display:block}
+.sheet .grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.sheet .in{max-width:780px;margin:0 auto}
+#sheetMap{width:100%;height:260px;border-radius:12px;background:var(--map-bg);display:block}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kv div{background:var(--panel-2);border-radius:10px;padding:8px 10px}
+.kv b{display:block;font-family:var(--f-display);font-size:19px;line-height:1.15}
+.kv span{font-size:11px;color:var(--ink-2)}
+.desc{white-space:pre-wrap;background:var(--panel-2);border-radius:10px;padding:10px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;transition:opacity .2s;z-index:60;pointer-events:none}
+.toast.on{opacity:1}
+.boot{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:var(--bg);padding:24px;text-align:center}
+.boot.on{display:flex}
+.boot h1{font-family:var(--f-display);margin:0 0 8px}
+.bootbar{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:50;background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+
+/* Chiffres façon écran de montre */
+.big,.tile .v,.pr .v,.sess .km,.sess .day b,.act .k,.kv b,.streak b,.hist-row b,.lrow b,.tip b,.track .mk{font-family:var(--f-num);letter-spacing:0}
+.big{font-weight:700;letter-spacing:-.02em}
+.tile .v,.pr .v{font-weight:600}
+.eyebrow{font-family:var(--f-display);letter-spacing:.14em}
+.brand h1{font-family:var(--f-display);letter-spacing:.02em}
+nav.tabs a.on{color:var(--accent)}
+.tile{border:1px solid transparent}
+.hero .big{text-shadow:0 0 28px var(--accent-soft)}
+/* Mises en page par écran */
+.home,.plan-layout,.jr-layout{display:grid;gap:12px}
+.home>*,.plan-layout>*,.jr-layout>*{min-width:0}
+@media (min-width:720px){.home{grid-template-columns:1fr 1fr}.home>.wide{grid-column:1/-1}}
+.plan-layout{grid-template-areas:"coach" "main" "side"}
+.plan-main{grid-area:main}.plan-coach{grid-area:coach}.plan-side{grid-area:side;display:grid;gap:12px;align-content:start}
+.hist-row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.hist-row:first-child{border-top:0}
+.hist-row b{font-family:var(--f-display);font-size:22px}
+.hist-row .k{font-size:12px;color:var(--ink-2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+
+/* PC : navigation en colonne à gauche, contenu large sur plusieurs colonnes */
+@media (min-width:1100px){
+  body{padding-bottom:28px;padding-left:96px}
+  .wrap{max-width:1360px;padding:0 32px}
+  nav.tabs{top:0;bottom:0;right:auto;width:96px;border-top:0;border-right:1px solid var(--line);padding:0}
+  nav.tabs .in{display:flex;flex-direction:column;gap:4px;padding:20px 0 0;max-width:none}
+  nav.tabs a{padding:13px 4px;margin:0 10px;border-radius:12px;font-size:12px}
+  nav.tabs a:hover{color:var(--ink);background:var(--panel)}
+  nav.tabs a.on{background:var(--accent-soft)}
+  .sec-title{font-size:30px;margin:22px 0 14px}
+  .grid{gap:16px}
+  .home{grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+  .home>#goalCard{grid-column:span 7}
+  .home>#nextCard{grid-column:span 5}
+  .home>#weekCard,.home>#formCard,.home>#recCard{grid-column:span 4}
+  .home>#yearCard{grid-column:1/-1}
+  #lastActs{grid-template-columns:1fr 1fr}
+  .lrow{grid-template-columns:200px 1fr 56px}
+  .plan-layout{grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto 1fr;grid-template-areas:"main coach" "main side";gap:16px;align-items:start}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .stats-grid>.span2{grid-column:1/-1}
+  .prs{grid-template-columns:repeat(8,1fr)}
+  .jr-layout{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
+  .jr-map{position:sticky;top:16px}
+  #routeMap{height:calc(100vh - 230px);min-height:460px}
+  .jr-list .filters{margin-top:0}
+  .sheet{left:auto;top:0;width:min(580px,92vw);max-height:none;border-radius:18px 0 0 18px;border-top:0;border-left:1px solid var(--line);padding:22px 22px 24px;transform:translateX(105%)}
+  .sheet .grab{display:none}
+  #sheetMap{height:320px}
+  .toast{bottom:28px}
+}
+
+
+/* Santé : saisies */
+.hform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
+.hform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2);font-weight:600}
+.inp{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 10px;font:inherit;font-size:15px;min-width:0}
+.inp:focus{outline:2px solid var(--cool);outline-offset:1px}
+.inp.n{width:78px;font-family:var(--f-num)}
+.inp.d{width:150px}
+.bpgrid{display:grid;grid-template-columns:76px repeat(3,minmax(0,84px));justify-content:start;gap:6px 8px;align-items:center;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.bpgrid .h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--panel-2);padding:8px 12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.hmsg{font-size:13px;margin-top:8px;min-height:1.2em}
+.hlist{display:grid;gap:4px;margin-top:10px}
+.hrow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
+.hrow:first-child{border-top:0}
+.xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}
+.xbtn:hover{color:var(--bad);background:var(--hover)}
+.bpser{display:grid;gap:10px;margin-top:12px}
+.bpbox{background:var(--panel-2);border-radius:12px;padding:10px 12px}
+.bpbig{font-family:var(--f-num);font-size:30px;font-weight:600;line-height:1.05}
+.bpbig small{font-size:14px;color:var(--ink-2);margin-left:3px}
+details.hd summary{cursor:pointer;font-weight:600;font-size:14px;margin-top:12px;color:var(--cool)}
+/* Courses */
+.wkstrip{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.wk{flex:0 0 auto;min-width:74px;border-radius:10px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);font-size:12px;line-height:1.25;cursor:pointer;text-align:left;color:var(--ink)}
+.wk b{display:block;font-family:var(--f-num);font-size:13px}
+.wk.V{border-color:color-mix(in srgb,var(--c1) 55%,transparent);background:color-mix(in srgb,var(--c1) 14%,var(--panel-2))}
+.wk.H{border-color:color-mix(in srgb,var(--c2) 55%,transparent);background:color-mix(in srgb,var(--c2) 14%,var(--panel-2))}
+.wk.T{background:linear-gradient(135deg,color-mix(in srgb,var(--c1) 16%,var(--panel-2)) 50%,color-mix(in srgb,var(--c2) 16%,var(--panel-2)) 50%)}
+.wk.on{box-shadow:0 0 0 2px var(--accent) inset}
+.wk .n{color:var(--ink-2)}
+.locdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.race{display:grid;grid-template-columns:56px 1fr;gap:12px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.race.pick{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:linear-gradient(160deg,var(--accent-soft),var(--panel) 55%)}
+.race.away{opacity:.6}
+.race>div{min-width:0}
+.race .pl .pill{white-space:normal}
+.race .rnote,.race .rn{overflow-wrap:anywhere}
+.race .rd{text-align:center;line-height:1.05}
+.race .rd b{display:block;font-family:var(--f-num);font-size:26px;font-weight:600}
+.race .rd small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.race .rn{font-weight:700;font-size:16px;line-height:1.25}
+.race .rm{color:var(--ink-2);font-size:13px;margin-top:2px}
+.race .pl{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.race .est{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:13px}
+.race .est b{font-family:var(--f-num);font-size:15px}
+.race .est span{color:var(--ink-2)}
+.race .why{margin-top:8px}
+.race .rnote{font-size:12px;color:var(--muted);margin-top:7px}
+.mhead{font-family:var(--f-display);font-weight:600;font-size:18px;margin:16px 0 8px;color:var(--ink-2);text-transform:capitalize}
+.pickrow{display:grid;grid-template-columns:72px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.pickrow:first-of-type{border-top:0}
+.pickrow b{font-family:var(--f-num);font-size:13px;color:var(--ink-2)}
+.courses-layout{display:grid;gap:12px}
+.courses-layout>*{min-width:0}
+@media (min-width:1100px){.courses-layout{grid-template-columns:minmax(0,1fr) 400px;align-items:start;gap:16px}.courses-side{position:sticky;top:16px;display:grid;gap:12px;grid-row:1}.courses-main{grid-column:1;grid-row:1}.courses-side{grid-column:2}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="hrow">
+      <div class="brand"><small>Cockpit running</small><h1 id="brandName">Cockpit</h1></div>
+      <div class="streak" title="Semaines consécutives avec au moins une activité"><b id="streakN">–</b><small>semaines<br>d'affilée</small></div>
+    </div>
+    <div class="sync" id="sync"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ACCUEIL -->
+<section class="view" id="v-accueil">
+  <div class="home">
+    <div class="card hero wide" id="goalCard"></div>
+    <div class="card wide" id="nextCard"></div>
+    <div class="card" id="weekCard"></div>
+    <div class="card" id="formCard"></div>
+    <div class="card wide" id="recCard"></div>
+    <div class="card wide" id="yearCard"></div>
+    <div class="card wide">
+      <div class="weekhead"><h2 style="margin:0">Dernières sorties</h2><a href="#journal" class="sub">Tout le journal →</a></div>
+      <div class="list" id="lastActs"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAN -->
+<section class="view" id="v-plan">
+  <div class="sec-title" id="planTitle">Plan</div>
+  <p class="sub" style="margin-top:-4px" id="planSub"></p>
+  <div class="plan-layout">
+    <div class="card coach plan-coach" id="coachCard"></div>
+    <div class="plan-main">
+      <div class="chips" id="weekChips"></div>
+      <div class="card" id="weekSummary" style="margin-bottom:12px"></div>
+      <div class="list" id="sessList"></div>
+    </div>
+    <aside class="plan-side">
+      <div class="card">
+        <h2>Allures de référence</h2>
+        <table class="t num" id="paceTable"></table>
+      </div>
+      <div class="card">
+        <h2>Zones d'allure</h2>
+        <div id="paceZones"></div>
+        <div class="note">Zones calculées d'après ton estimation 5 km Garmin.</div>
+      </div>
+      <div class="card">
+        <h2>Zones cardio</h2>
+        <div id="hrZones"></div>
+        <div class="note">Basées sur ta FC max.</div>
+      </div>
+      <div class="card">
+        <h2>Renfo</h2>
+        <div id="renfoList" class="sub"></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="view" id="v-stats">
+  <div class="sec-title">Évolution</div>
+  <div id="loadGrid">
+    <div class="sub" id="loadHead" style="margin:-2px 0 10px"></div>
+    <div class="grid stats-grid" style="margin-bottom:16px">
+      <div class="card span2" id="loadCard"></div>
+      <div class="card" id="focusCard"></div>
+      <div class="card" id="kcalCard"></div>
+    </div>
+  </div>
+  <div class="sec-title" style="font-size:22px;margin-top:6px">Volume et allure</div>
+  <div class="filters">
+    <div class="chips" id="rangeChips" style="margin:0"></div>
+  </div>
+  <div class="grid stats-grid">
+    <div class="card span2">
+      <h2>Kilomètres par semaine</h2>
+      <div class="sub" id="wkSub"></div>
+      <div class="chart" id="chWeekly"></div>
+    </div>
+    <div class="card span2">
+      <h2>Ton allure progresse ?</h2>
+      <div class="sub">Chaque point = une sortie course (≥ 3 km). La ligne = moyenne glissante sur 10 sorties. Plus haut = plus rapide.</div>
+      <div class="chart" id="chPace"></div>
+    </div>
+    <div class="card">
+      <h2>Condition et fatigue</h2>
+      <div class="sub">Estimation calculée à partir de la charge de toutes tes activités (Garmin, via intervals.icu) : condition = moyenne 42 jours, fatigue = moyenne 7 jours.</div>
+      <div class="chart" id="chLoad"></div>
+      <div class="legend"><span><i style="background:var(--c1)"></i>Condition (42 j)</span><span><i style="background:var(--c2)"></i>Fatigue (7 j)</span></div>
+    </div>
+    <div class="card">
+      <h2>Cumul annuel course</h2>
+      <div class="sub">Kilomètres course + trail cumulés au fil de l'année.</div>
+      <div class="chart" id="chCumul"></div>
+      <div class="legend" id="cumulLegend"></div>
+    </div>
+    <div class="grid g2 span2">
+      <div class="card">
+        <h2>Tes jours de course</h2>
+        <div class="chart" id="chDow"></div>
+      </div>
+      <div class="card">
+        <h2>Distances des sorties</h2>
+        <div class="chart" id="chDist"></div>
+      </div>
+    </div>
+    <div class="card span2">
+      <h2>Tous sports</h2>
+      <div class="sub">Heures par sport et par année (temps en mouvement).</div>
+      <div class="chips" id="sportYearChips" style="margin-top:8px"></div>
+      <div class="scroll-x"><table class="t num" id="sportTable"></table></div>
+    </div>
+    <div class="grid g2 span2">
+      <div class="card">
+        <h2>Chaussures</h2>
+        <div id="shoes"></div>
+        <div class="note">Repère d'usure : 700 km.</div>
+      </div>
+      <div class="card">
+        <h2>Vélo</h2>
+        <div class="tiles" id="bikeTiles"></div>
+        <div id="bikes" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECORDS -->
+<section class="view" id="v-records">
+  <div class="sec-title">Records</div>
+  <div class="grid">
+    <div class="card">
+      <h2>Records course</h2>
+      <div class="prs" id="prs"></div>
+      <div class="note">Meilleurs efforts calculés depuis les données de ta montre. Touche un record pour ouvrir l'activité.</div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h2>Prédictions de course</h2>
+        <div class="sub" id="predSub" style="margin-bottom:8px"></div>
+        <table class="t num" id="predTable"></table>
+        <div class="note">Estimations recalculées chaque soir à partir de tes données Garmin (le 15 km est interpolé).</div>
+      </div>
+      <div class="card">
+        <h2>Évolution de ta prédiction 10 km</h2>
+        <div class="sub">Estimation Garmin au fil des mois, en 10 km. Plus haut = plus rapide.</div>
+        <div class="chart" id="chPred"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Progression par année</h2>
+      <div class="sub">Ton meilleur 5 km et ton meilleur 10 km de chaque année. Plus haut = plus rapide.</div>
+      <div class="chart" id="chPrYear"></div>
+    </div>
+  </div>
+</section>
+
+<!-- RÉCUPÉRATION -->
+<section class="view" id="v-recup">
+  <div class="sec-title">Santé</div>
+  <div class="grid stats-grid" id="healthGrid" style="margin-bottom:16px">
+    <div class="card span2" id="wtCard"></div>
+    <div class="card span2" id="bpCard"></div>
+  </div>
+  <div class="sec-title" style="font-size:22px;margin-top:6px">Récupération</div>
+  <p class="sub" style="margin-top:-4px" id="recSub"></p>
+  <div class="chips" id="recRange"></div>
+  <div id="recEmpty"></div>
+  <div class="grid stats-grid" id="recGrid">
+    <div class="card span2" id="recSummary"></div>
+    <div class="card span2"><h2>Sommeil</h2><div class="sub" id="slSub"></div><div class="chart" id="chSleep"></div><div class="legend" id="slLegend"></div></div>
+    <div class="card"><h2>HRV (variabilité cardiaque)</h2><div class="sub" id="hrvSub"></div><div class="chart" id="chHrv"></div></div>
+    <div class="card"><h2>Fréquence cardiaque au repos</h2><div class="sub" id="rhrSub"></div><div class="chart" id="chRhr"></div></div>
+    <div class="card"><h2>Body Battery</h2><div class="sub" id="bbSub"></div><div class="chart" id="chBB"></div></div>
+    <div class="card"><h2>Stress</h2><div class="sub" id="stressSub"></div><div class="chart" id="chStress"></div></div>
+    <div class="card" id="stepsCard"><h2>Pas par jour</h2><div class="sub" id="stSub"></div><div class="chart" id="chSteps"></div></div>
+    <div class="card span2"><h2>14 dernières nuits</h2><div class="scroll-x"><table class="t num" id="recTable"></table></div></div>
+  </div>
+</section>
+
+<!-- COURSES -->
+<section class="view" id="v-courses">
+  <div class="sec-title">Courses</div>
+  <p class="sub" style="margin-top:-4px" id="crSub"></p>
+  <div class="courses-layout">
+    <aside class="courses-side">
+      <div class="card coach" id="crPicks"></div>
+    </aside>
+    <div class="courses-main">
+      <div class="card" style="margin-bottom:12px">
+        <div class="weekhead"><h2 style="margin:0">Où tu seras le week-end</h2><span class="sub" id="crLegend" style="white-space:nowrap"></span></div>
+        <div class="wkstrip" id="crWeeks"></div>
+        <div class="note">D'après ton calendrier d'alternance. Le dimanche entre deux villes est marqué « entre les deux ». Touche un week-end pour voir ses courses.</div>
+      </div>
+      <div class="chips" id="crFit"></div>
+      <div class="chips" id="crDist"></div>
+      <div class="sub" id="crCount" style="margin-bottom:6px"></div>
+      <div id="crList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNAL -->
+<section class="view" id="v-journal">
+  <div class="sec-title">Parcours & journal</div>
+  <div class="jr-layout">
+  <div class="card jr-map">
+    <div class="weekhead"><h2 style="margin:0">Carte de tes parcours</h2><span class="sub" id="mapCount"></span></div>
+    <div class="chips" id="cityChips"></div>
+    <div class="mapbox"><canvas id="routeMap"></canvas>
+      <div class="mapbtns"><button type="button" id="zIn" aria-label="Zoomer">+</button><button type="button" id="zOut" aria-label="Dézoomer">−</button><button type="button" id="zReset" aria-label="Recentrer">⟲</button></div></div>
+    <div class="note"><span id="mapWhat">Tous tes tracés course + trail</span> superposés : plus une rue est claire, plus tu y es passé. Pince ou molette pour zoomer, glisse pour te déplacer.<span id="osmCredit" hidden> Fond de carte © contributeurs OpenStreetMap.</span></div>
+  </div>
+  <div class="jr-list">
+  <div class="filters">
+    <input class="search" id="q" type="search" placeholder="Chercher : fractionné, trail, ville…" aria-label="Chercher une activité">
+  </div>
+  <div class="chips" id="sportChips"></div>
+  <div class="sub" id="actCount" style="margin-bottom:8px"></div>
+  <div class="list" id="actList"></div>
+  <div style="text-align:center;margin:12px 0"><button class="btn" id="moreBtn">Afficher plus</button></div>
+  </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in">
+    <a href="#accueil" data-v="accueil"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</a>
+    <a href="#plan" data-v="plan"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Séances</a>
+    <a href="#stats" data-v="stats"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Évolution</a>
+    <a href="#recup" data-v="recup"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-8.6-8.6C2.2 8.2 4.2 5 7.4 5c2 0 3.4 1.1 4.6 2.7C13.2 6.1 14.6 5 16.6 5c3.2 0 5.2 3.2 4 6.4C19 15.6 12 20 12 20z"/></svg>Santé</a>
+    <a href="#records" data-v="records"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Records</a>
+    <a href="#courses" data-v="courses"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/></svg>Courses</a>
+    <a href="#journal" data-v="journal"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z M9 4v14M15 6v14"/></svg>Parcours</a>
+  </div>
+</nav>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Détail de l'activité"><div class="grab"></div><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<div id="boot" class="boot"></div>
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script src="boot.js"></script>
+</body>
+</html>
