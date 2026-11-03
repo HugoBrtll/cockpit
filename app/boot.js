@@ -96,7 +96,9 @@
     return !!(window.CK.acts && window.CK.acts.length);
   }
   function launch() {
-    const s = document.createElement("script"); s.src = "app.js"; document.body.appendChild(s);
+    const s = document.createElement("script"); s.src = "app.js";
+    s.onload = () => { const b = document.createElement("button"); b.className = "btn"; b.style.marginTop = "6px"; b.textContent = "↻ Actualiser depuis Drive"; b.onclick = manual; document.getElementById("sync").after(b); };
+    document.body.appendChild(s);
   }
 
   /* ---------- poids et tension : mêmes appels que la base de l'artefact, stockés dans Drive ---------- */
