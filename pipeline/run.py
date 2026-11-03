@@ -170,6 +170,16 @@ def build_data(acts, traces, hist, wellness, garmin, cfg, today):
     rows = [r for r in hist.get("rows", []) if r[1] not in iv_min]
     rows += [row(a, traces.get(a["id"], {})) for a in acts]
     rows.sort(key=lambda r: r[1])
+        # les communes à moins de 20 km d'une ville d'alternance comptent comme cette ville sur la carte
+    pos = {p["n"]: p for p in cfg.get("lieux", [])}
+    grands = [pos[n] for n in cfg.get("lieux_alternance", {}).values() if n in pos]
+    def rattache(n):
+        p = pos.get(n)
+        for g in grands:
+            if p and math.hypot((p["lat"] - g["lat"]) * 111.3, (p["lon"] - g["lon"]) * 111.3 * math.cos(math.radians(g["lat"]))) <= 20:
+                return g["n"]
+        return n
+    rows = [r[:15] + [rattache(r[15])] + r[16:] for r in rows]
     eff = list(hist.get("efforts", []))  # [libellé, secondes, date, id]
     for a in acts:
         for k, s in (traces.get(a["id"], {}).get("be") or {}).items():
