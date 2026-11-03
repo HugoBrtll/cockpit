@@ -1,0 +1,33 @@
+name: Script du soir
+on:
+  schedule:
+    - cron: "7 20 * * *"    # données du jour, avant le coach
+    - cron: "17 21 * * *"   # reprend le plan déposé par le coach
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+concurrency: soir
+jobs:
+  soir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r pipeline/requirements.txt
+      - name: Mise à jour de Drive
+        env:
+          IV_KEY: ${{ secrets.IV_KEY }}
+          IV_ATHLETE: ${{ secrets.IV_ATHLETE }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          ENVOI_MONTRE: ${{ vars.ENVOI_MONTRE }}
+        run: |
+          if [ "$ENVOI_MONTRE" = "oui" ]; then python pipeline/run.py; else python pipeline/run.py --no-sync; fi
+      - name: Garder la tâche active
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/soir.yml/enable"
