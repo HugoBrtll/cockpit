@@ -2,8 +2,7 @@ name: Script du soir
 on:
   schedule:
     - cron: "7 7 * * *"     # nuit de sommeil et récupération du matin
-    - cron: "7 19 * * *"    # données du jour, avant le coach
-    - cron: "17 20 * * *"   # reprend le plan déposé par le coach
+    - cron: "3 20 * * *"    # données du jour et plan déposé par le coach
   workflow_dispatch:
 permissions:
   actions: write
