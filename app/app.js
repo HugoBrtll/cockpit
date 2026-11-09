@@ -993,5 +993,25 @@ new MutationObserver(redrawTheme).observe(document.documentElement,{attributes:t
 let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{const v=(location.hash||"#accueil").slice(1);draw(VIEWS.includes(v)?v:"accueil")},200)});
 $("#streakN").textContent=STREAK;
 if(META.owner){$("#brandName").innerHTML=esc(META.owner)+(META.ville?` <span>·</span> ${esc(META.ville)}`:"");document.title=`Cockpit running ${META.owner}`}
+/* Ville affichée à côté du nom : celle où se trouve l'appareil (position arrondie à ~100 m, nom de ville via OpenStreetMap).
+   Sans autorisation de position ou hors ligne : dernière ville trouvée, sinon META.ville. Nouvelle recherche au plus toutes les 30 min. */
+(function villeActuelle(){
+  if(!META.owner||!("geolocation" in navigator))return;
+  const show=v=>{if(v)$("#brandName").innerHTML=esc(META.owner)+` <span>·</span> ${esc(v)}`};
+  const saved=store.get("hb-ici",null);
+  if(saved&&saved.v)show(saved.v);
+  if(saved&&Date.now()-saved.t<30*60e3)return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const la=+pos.coords.latitude.toFixed(3),lo=+pos.coords.longitude.toFixed(3);
+    if(saved&&saved.v&&Math.abs(la-saved.la)<0.01&&Math.abs(lo-saved.lo)<0.015){store.set("hb-ici",{...saved,t:Date.now()});return}
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${la}&lon=${lo}&zoom=10&accept-language=fr`);
+      if(!r.ok)return;
+      const a=(await r.json()).address||{};
+      const v=a.city||a.town||a.village||a.municipality||a.county;
+      if(v){store.set("hb-ici",{v,t:Date.now(),la,lo});show(v)}
+    }catch(e){}
+  },()=>{},{enableHighAccuracy:false,maximumAge:30*60e3,timeout:15000});
+})();
 $("#sync").textContent=`Données Garmin au ${fDate(SNAP,true)} · ${A.length} activités depuis ${MOIS[D(A[0].day).getMonth()]} ${A[0].day.slice(0,4)}`;
 route();
