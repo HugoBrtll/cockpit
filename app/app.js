@@ -384,6 +384,14 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 const LIVEW=(()=>{const L=PLAN.filter(w=>w.items.length&&w.items.at(-1).d>=TODAY).slice(0,3);return L.length?L:PLAN.slice(-1)})(); // semaine en cours + les 2 suivantes
 let curWeek=(()=>{const w=PLAN.find(w=>w.items.some(s=>s.d>=TODAY));return w?w.w:0})();
 const done=new Set(store.get("hb-done",[]));
+/* Séances cochées « C'est fait » : partagées entre appareils via fait.json dans Drive (copie locale gardée). */
+let faitDB=null;
+(async()=>{try{faitDB=(await claude.use("db"))?.collection("plan_fait")||null}catch(e){}if(!faitDB)return;
+  faitDB.onSnapshot(s=>{const ids=new Set(s.docs.map(d=>d.id));
+    if(!store.get("hb-done-migre",false)){store.set("hb-done-migre",true);[...done].filter(d=>!ids.has(d)).forEach(d=>{ids.add(d);faitDB.doc(d).set({d,t:Date.now()})})}
+    done.clear();ids.forEach(d=>done.add(d));store.set("hb-done",[...done]);
+    if($("#v-plan")?.classList.contains("on"))renderPlan();if($("#v-accueil")?.classList.contains("on"))renderNext();
+  })})();
 function sessDone(s){return done.has(s.d)||(s.t!=="repos"&&s.t!=="renfo"&&s.d<=SNAP.slice(0,10)&&RUNS.some(r=>r.day===s.d))}
 function realised(s){const rs=RUNS.filter(r=>r.day===s.d);if(!rs.length)return null;
   const km=rs.reduce((a,r)=>a+r.km,0),mov=rs.reduce((a,r)=>a+r.mov,0);return{km,pace:mov/km,n:rs.length}}
@@ -418,7 +426,7 @@ function renderPlan(){
      <div class="sess-detail"><ol>${s.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol><div class="why">${esc(s.why)}</div>${s.adj?`<div class="why" style="margin-top:6px;border-left:3px solid var(--cool)">↻ ${esc(s.adj)}</div>`:""}
      <div class="btnrow"><button class="btn primary" data-a="done">${isD?"Marquer non faite":"C'est fait ✓"}</button><button class="btn" data-a="copy">Copier la séance</button></div></div>`;
     div.addEventListener("click",e=>{const act=e.target.closest("[data-a]");
-      if(act){e.stopPropagation();if(act.dataset.a==="done"){done.has(s.d)?done.delete(s.d):done.add(s.d);store.set("hb-done",[...done]);renderPlan();renderNext();toast(done.has(s.d)?"Bien joué 💪":"Séance remise à faire")}
+      if(act){e.stopPropagation();if(act.dataset.a==="done"){const was=done.has(s.d);was?done.delete(s.d):done.add(s.d);store.set("hb-done",[...done]);if(faitDB){try{was?faitDB.doc(s.d).delete():faitDB.doc(s.d).set({d:s.d,t:Date.now()})}catch(e){}}renderPlan();renderNext();toast(done.has(s.d)?"Bien joué 💪":"Séance remise à faire")}
         else{const txt=`${fDate(s.d)} – ${s.title}${s.pace?" ("+s.pace+")":""}\n`+s.steps.map(x=>"• "+x).join("\n");navigator.clipboard?.writeText(txt).then(()=>toast("Séance copiée"),()=>toast("Copie impossible ici"))}return}
       div.classList.toggle("open")});
     div.addEventListener("keydown",e=>{if(e.key==="Enter")div.classList.toggle("open")});
