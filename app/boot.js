@@ -5,7 +5,7 @@
   const API = "https://www.googleapis.com/drive/v3/files";
   const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
   const NEEDED = ["data.json", "garmin.json", "plan.json", "races.json"];
-  const DBFILE = { sante_poids: "poids.json", sante_tension: "tension.json" };
+  const DBFILE = { sante_poids: "poids.json", sante_tension: "tension.json", plan_fait: "fait.json" };
   let token = null, tokenUntil = 0, pendingToken = null, tc = null;
 
   /* ---------- copie locale (IndexedDB) ---------- */
